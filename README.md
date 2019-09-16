@@ -1,2 +1,1 @@
-#Algoritmo para equalização de imagens em baixo nível
-##inicializando
+# Repository used for Image Processing course at UFRN. 
