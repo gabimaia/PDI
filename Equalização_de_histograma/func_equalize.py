@@ -1,59 +1,63 @@
 import numpy as np
-import cv2 as cv
-#import matplotlib.pyplot as plt
+#import cv2 as cv
+import matplotlib.pyplot as plt
 from numpy import array, int32
 
-def pgmread(nome_do_arquivo):
-  """  essa funcao le um arquivo pgm e transforma em um array"""
-  f = open(nome_do_arquivo,'r')
+def pgmread(filename):
+
+  """  This function write a portable gray map (PGM) to a numpy array"""
+  
+  f = open(filename,'r')
+  # lendo informacoes do cabecalho
   count = 0
-  while count < 3: # Le as informacoes do cabecalho
+  while count < 3:
     line = f.readline()
-    if line[0] == '#': # Ignora comentarios
+    if line[0] == '#': # Ignore comments
       continue
     count = count + 1
-    if count == 1: # informacao do numero magico do cabecalho
+    if count == 1: # Magic num info
       magicNum = line.strip()
       if magicNum != 'P2' and magicNum != 'P5':
         f.close()
-        print ('Not a valid PGM file')
+        print ('arquivo pgm invalido')
         exit()
-    elif count == 2: # pega numero de linhas e colunas da matriz 
-      [width, height] = (line.strip()).split()
-      width = int(width)
-      height = int(height)
-    elif count == 3: # nivel maximo de intensidade
+    elif count == 2: # numero de linhas e colunas da matriz
+      [colunas, linhas] = (line.strip()).split()
+      colunas = int(colunas)
+      linhas = int(linhas)
+    elif count == 3: # Max gray level
       maxVal = int(line.strip())
-  # Lendo as informacoes dos pixels
+  # Read pixels information
   img = []
   buf = f.read()
   elem = buf.split()
-  if len(elem) != width*height:
-    print ('erro no numero de pixels')
+  if len(elem) != colunas*linhas:
+    print ('Error in number of pixels')
     exit()
-  for i in range(height):
+  for i in range(linhas):
     tmpList = []
-    for j in range(width):
-      tmpList.append(elem[i*width+j])
+    for j in range(colunas):
+      tmpList.append(elem[i*colunas+j])
     img.append(tmpList)
-  return (array(img), width, height, maxVal)
+  return (array(img), colunas, linhas, maxVal)
 
-def pgmwrite(img, file, maxVal=255, magicNum='P2'):
-  """  Essa funcao transforma um array em um histograma com formato PGM """
+def pgmwrite(img, filename, maxVal=255, magicNum='P2'):
 
+  """  This function writes a numpy array to a Portable GrayMap (PGM) image file """
+  
   img = int32(img).tolist()
-  f = open(file,'w')
-  width = 0
-  height = 0
-  for row in img: #adiciona as informacoes do cabecalho pgm
-    height = height + 1
-    width = len(row)
+  f = open(filename,'w')
+  colunas = 0
+  linhas = 0
+  for row in img:
+    linhas = linhas + 1
+    colunas = len(row)
   f.write(magicNum + '\n')
-  f.write(str(width) + ' ' + str(height) + '\n')
+  f.write(str(colunas) + ' ' + str(linhas) + '\n')
   f.write(str(maxVal) + '\n')
-  for i in range(height): #escreve o array de entrada em pixels
+  for i in range(linhas):
     count = 1
-    for j in range(width):
+    for j in range(colunas):
       f.write(str(img[i][j]) + ' ')
       if count >= 17:
         # No line should contain gt 70 chars (17*4=68)
@@ -64,61 +68,71 @@ def pgmwrite(img, file, maxVal=255, magicNum='P2'):
         count = count + 1
     f.write('\n')
   f.close()
-
-  
-def PMF(hist, totpixel, max): #funcao massa de probabilidade
+ 
+def PMF(hist, totpixel, max):
     for i in range (0,max+1):
       hist[i] = hist[i]/(totpixel)
     #return hist
 
-def CDF(hist, max): #funcao de distribuicao acumulada
+def CDF(hist, max):
     for i in range (1,max+1):
         hist[i] += hist[i-1]
     #return hist
 
-def normalize(hist, max): #normaliza os valores armazenados em hist[] entre 0 e max.
+def normalize(hist, max):
   for i in range(0,max+1):
     hist[i]=hist[i]*max
+  return hist
 
-
-img_in = input('digite o nome do arquivo de entrada com extensao .pgm: ')
+img_in = input('digite o nome do arquivo de entrada .pgm: ')
 img_in = str(img_in)
 
-imagem, col, row, max_value=pgmread(img_in) #le o arquivo de entrada pgm e armazena as variaveis correspondentes
-img2 = np.asfarray(imagem,float) #transforma o array de string em array de floats.
+#lendo o arquivo de entrada e separando as informacoes principais do arquivo
 
+imagem, col, row, max_value = pgmread(img_in)
 
+img2=np.asfarray(imagem,float) #transforma o array de entrada do tipo string em float
 
-#criando o histograma
+#criando meu histograma
 
-hist=[] #inicializando
-
-for i in range (max_value+1): #armazenando zeros no array do histograma
+hist=[]
+for i in range (max_value+1):
   hist.append(0)
-
-for i in range (0,row): #armazenando as intensidades dos pixels da imagem de entrada na posicao correspondente do histograma em formato inteiro.
-  for j in range (0,col):
-    hist[int(img2[i][j])] += 1.0
-
-
-#aplicando a transformacao no histograma de entrada
-
-totpixel = col * row #calcula o total de pixel da imagem de entrada
-
-PMF(hist, totpixel, max_value)  #aplica a PMF ao histograma
-CDF(hist, max_value)            #aplica a CDF ao histograma
-normalize(hist,max_value)       #aplica a normalizacao ao histograma
-
-#criando uma nova matriz de saida a partir do histograma processado
 
 for i in range (0,row):
   for j in range (0,col):
-    img2[i][j] = hist[int(img2[i][j])] #armazena as intensidades nas suas posicoes correspondentes na matriz de saida
+    hist[int(img2[i][j])] += 1.0
 
-#criando o arquivo de saida a partir da matriz correspondente
+#plotando o histograma da imagem de entrada
 
-img_out= input('digite o nome do arquivo de saida com extensao .pgm: ')
-img_out=str(img_out)
+plt.plot(hist)
+plt.show()
 
-pgmwrite(img2,img_out)
+#processando meu histograma de entrada
+
+totpixel = col * row 
+
+PMF(hist, totpixel, max_value)
+CDF(hist, max_value)
+normalize(hist,max_value)
+
+# plotando o hisograma da imagem de saida
+
+plt.plot(hist)
+plt.show()
+
+#transformando meu histograma processado em um array de saida
+
+for i in range (0,row):
+  for j in range (0,col):
+    img2[i][j] = hist[int(img2[i][j])]
+
+#transformando o meu array de saida em um arquivo .pgm
+
+img3 = input('digite o nome do arquivo de saida .pgm: ')
+img3 = str(img3)
+
+
+pgmwrite(img2,img3)
+
 
