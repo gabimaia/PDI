@@ -11,33 +11,39 @@ def plot(data, title):
     plt.title(title)
 plot.i = 0
 
-# Load the data...
+# Carregando a imagem de entrada...
 im = Image.open('einstein.jpg')
 data = np.array(im, dtype=float)
 plot(data, 'Original')
 
-# A very simple and very narrow highpass filter
+
 kernel = np.array([[-1, -1, -1],
                    [-1,  8, -1],
                    [-1, -1, -1]])
-highpass_3x3 = ndimage.convolve(data, kernel)
-plot(highpass_3x3, 'Simple 3x3 Highpass')
 
-# A slightly "wider", but sill very simple highpass filter 
+highpass_3x3 = ndimage.convolve(data, kernel)
+
+#plot(highpass_3x3, 'Simple 3x3 Highpass')
+
+
 kernel = np.array([[-1, -1, -1, -1, -1],
                    [-1,  1,  2,  1, -1],
                    [-1,  2,  4,  2, -1],
                    [-1,  1,  2,  1, -1],
                    [-1, -1, -1, -1, -1]])
 highpass_5x5 = ndimage.convolve(data, kernel)
-plot(highpass_5x5, 'Simple 5x5 Highpass')
 
-# Another way of making a highpass filter is to simply subtract a lowpass
-# filtered image from the original. Here, we'll use a simple gaussian filter
-# to "blur" (i.e. a lowpass filter) the original.
+#plot(highpass_5x5, '5x5 passa-alta')
 
-lowpass = ndimage.gaussian_filter(data, 3)
-gauss_highpass = data - lowpass
-plot(gauss_highpass, r'Gaussian Highpass, $\sigma = 3 pixels$')
+# fazer um passa alta subtraindo um passa baixa
 
+lowpass = ndimage.gaussian_filter(data,3)
+lowpass1 = ndimage.median_filter(data, 3)
+lowpass2 = ndimage.minimum_filter(data,3)
+lowpass3 = ndimage.maximum_filter(data,3)
+
+#gauss_highpass = data - lowpass
+
+plot(lowpass2, r'minimo')
+plot(lowpass3, r'maximo')
 plt.show()
