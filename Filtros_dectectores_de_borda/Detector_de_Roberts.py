@@ -16,7 +16,7 @@ def load_image( infilename ) :
     img = Image.open(infilename)
     img.load()
     # note signed integer
-    return np.asarray( img, dtype="int32" )
+    return np.asarray( img, dtype="uint32" )
 
 def save_image( data, outfilename ) :
     img = Image.fromarray( np.asarray( np.clip(data,0,255), dtype="uint8"), "L" )
