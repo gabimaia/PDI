@@ -1,1 +1,1 @@
-# Repository used for Image Processing course at UFRN. 
+# Repository for deployment of image processing tests
